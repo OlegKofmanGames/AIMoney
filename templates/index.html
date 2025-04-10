@@ -1,0 +1,1437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIMoney - Smart Stock Analysis</title>
+    <!-- Favicon -->
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='favicon/apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='favicon/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='favicon/favicon-16x16.png') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='favicon/site.webmanifest') }}">
+    <link rel="mask-icon" href="{{ url_for('static', filename='favicon/safari-pinned-tab.svg') }}" color="#2c3e50">
+    <meta name="msapplication-TileColor" content="#2c3e50">
+    <meta name="theme-color" content="#2c3e50">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --success-color: #2ecc71;
+            --warning-color: #f39c12;
+            --light-bg: #f8f9fa;
+            --dark-text: #2c3e50;
+            --light-text: #ecf0f1;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light-bg);
+            color: var(--dark-text);
+        }
+        
+        .navbar {
+            background-color: var(--primary-color);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            color: var(--light-text) !important;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .card-header {
+            background-color: var(--primary-color);
+            color: var(--light-text);
+            font-weight: 600;
+            border-bottom: none;
+        }
+        
+        .chart-container {
+            margin: 20px 0;
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .financial-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .metric-card {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .metric-card h5 {
+            color: var(--primary-color);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+        
+        .metric-card p {
+            font-size: 1.1rem;
+            margin-bottom: 0;
+            font-weight: 500;
+        }
+        
+        .nav-tabs {
+            border-bottom: 2px solid var(--primary-color);
+            margin-bottom: 1rem;
+        }
+        
+        .nav-tabs .nav-link {
+            border: none;
+            color: var(--dark-text);
+            font-weight: 500;
+            padding: 10px 20px;
+            transition: all 0.2s;
+        }
+        
+        .nav-tabs .nav-link:hover {
+            color: var(--secondary-color);
+        }
+        
+        .nav-tabs .nav-link.active {
+            color: var(--secondary-color);
+            border-bottom: 3px solid var(--secondary-color);
+            background-color: transparent;
+        }
+        
+        .tab-content {
+            padding: 1.5rem;
+            background: white;
+            border-radius: 0 0 10px 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .btn-primary {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+            font-weight: 500;
+            padding: 8px 20px;
+            border-radius: 5px;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2980b9;
+            border-color: #2980b9;
+        }
+        
+        .alert {
+            border-radius: 8px;
+            font-weight: 500;
+        }
+        
+        .cross-indicator {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        
+        .death-cross {
+            background-color: var(--accent-color);
+            color: white;
+        }
+        
+        .golden-cross {
+            background-color: var(--success-color);
+            color: white;
+        }
+        
+        .neutral-cross {
+            background-color: var(--warning-color);
+            color: white;
+        }
+        
+        .form-control {
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+        
+        .form-control:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        }
+        
+        .form-check-input:checked {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+        
+        .company-description {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-top: 20px;
+        }
+        
+        .company-website {
+            margin-top: 15px;
+            font-weight: 500;
+        }
+        
+        .company-website a {
+            color: var(--secondary-color);
+            text-decoration: none;
+        }
+        
+        .company-website a:hover {
+            text-decoration: underline;
+        }
+        
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+            color: var(--secondary-color);
+        }
+        
+        .cross-status-section {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .cross-status-card {
+            min-width: 200px;
+            color: white;
+            transition: transform 0.2s;
+        }
+        
+        .cross-status-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .cross-status-card.death-cross {
+            background-color: var(--accent-color);
+        }
+        
+        .cross-status-card.golden-cross {
+            background-color: var(--success-color);
+        }
+        
+        .cross-status-card.neutral-cross {
+            background-color: var(--warning-color);
+        }
+        
+        .cross-status-card h6 {
+            color: white;
+            font-weight: 600;
+        }
+        
+        .cross-status-card p {
+            color: white;
+            font-size: 1.1rem;
+            margin-bottom: 0;
+        }
+        
+        .cross-status-card i {
+            margin-right: 8px;
+        }
+        
+        .indicator-card {
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .trend-indicator { background-color: #e3f2fd; }
+        .momentum-indicator { background-color: #f3e5f5; }
+        .volatility-indicator { background-color: #e8f5e9; }
+        .volume-indicator { background-color: #fff3e0; }
+        .chart-container {
+            margin-bottom: 30px;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            background-color: white;
+        }
+        .signal-bullish { color: #2e7d32; }
+        .signal-bearish { color: #c62828; }
+        .signal-neutral { color: #757575; }
+        
+        /* New indicator styles */
+        .technical-indicators {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--light-bg);
+            border-radius: 12px;
+        }
+
+        .indicator-card {
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease-in-out;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .indicator-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .indicator-card h6 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .indicator-card p {
+            font-size: 1.1rem;
+            margin: 0;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .indicator-card i {
+            font-size: 1.2rem;
+        }
+
+        .indicator-card.death-cross {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
+
+        .indicator-card.golden-cross {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+        }
+
+        .indicator-card.neutral-cross {
+            background: linear-gradient(135deg, #f39c12 0%, #d35400 100%);
+        }
+
+        .indicator-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
+            pointer-events: none;
+        }
+
+        .cross-status-section {
+            background: var(--light-bg);
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+        }
+
+        .cross-status-section h5 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--primary-color);
+        }
+
+        .cross-status-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .cross-status-card {
+            border-radius: 12px;
+            padding: 20px;
+            min-width: unset;
+            height: 100%;
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .cross-status-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 12px rgba(0,0,0,0.15);
+        }
+
+        .technical-indicators h5 {
+            grid-column: 1 / -1;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        /* Modern UI Improvements */
+        .stock-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .stock-header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .stock-header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .search-form {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .search-form .input-group {
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .search-form .input-group-text {
+            background: var(--light-bg);
+            border: none;
+            padding: 0.8rem 1.2rem;
+        }
+
+        .search-form .form-control {
+            border: none;
+            padding: 0.8rem 1.2rem;
+            font-size: 1.1rem;
+        }
+
+        .search-form .btn-primary {
+            padding: 0.8rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .indicators-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .indicator-card {
+            border-radius: 15px;
+            padding: 1.5rem;
+            background: white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .indicator-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .chart-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .chart-section img {
+            border-radius: 8px;
+            width: 100%;
+        }
+
+        .financial-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: var(--light-bg);
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .metric-card i {
+            font-size: 2rem;
+            color: var(--secondary-color);
+            margin-bottom: 1rem;
+        }
+
+        .metric-card h5 {
+            font-size: 1rem;
+            color: var(--dark-text);
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-card p {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        /* Update the navigation tabs */
+        .nav-tabs {
+            border: none;
+            margin-bottom: 2rem;
+            gap: 1rem;
+        }
+
+        .nav-tabs .nav-link {
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            color: var(--dark-text);
+            background: var(--light-bg);
+            transition: all 0.3s ease;
+        }
+
+        .nav-tabs .nav-link:hover {
+            background: var(--secondary-color);
+            color: white;
+        }
+
+        .nav-tabs .nav-link.active {
+            background: var(--secondary-color);
+            color: white;
+        }
+
+        .live-data-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+        
+        .live-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #dc3545;
+            margin-right: 8px;
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0.3; }
+            100% { opacity: 1; }
+        }
+        
+        .live-price {
+            color: var(--primary-color);
+        }
+        
+        .price-change {
+            font-weight: bold;
+            padding: 5px 0;
+            border-radius: 5px;
+        }
+        
+        .price-up {
+            color: var(--success-color);
+        }
+        
+        .price-down {
+            color: var(--accent-color);
+        }
+        
+        .card {
+            border: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+        }
+        
+        .card:hover {
+            transform: translateY(-3px);
+        }
+        
+        .card-title {
+            color: var(--primary-color);
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        
+        .text-success {
+            color: var(--success-color) !important;
+        }
+        
+        .text-danger {
+            color: var(--accent-color) !important;
+        }
+        
+        #liveDataSection {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-robot"></i> AIMoney
+            </a>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-search"></i> Smart Stock Analysis
+            </div>
+            <div class="card-body">
+                <form method="POST" action="/analyze" class="mb-4" id="searchForm">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-tag"></i></span>
+                                <input type="text" name="symbol" id="symbol" class="form-control" placeholder="Enter stock ticker (e.g., AAPL)" required
+                                       value="{{ request.form.get('symbol', '') }}">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-calendar"></i></span>
+                                <input type="date" name="start_date" class="form-control" 
+                                       value="{{ request.form.get('start_date', '') }}">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-calendar"></i></span>
+                                <input type="date" name="end_date" class="form-control"
+                                       value="{{ request.form.get('end_date', '') }}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <button type="submit" class="btn btn-primary" id="analyzeButton">
+                            <i class="bi bi-search"></i> Analyze
+                        </button>
+                        <button type="button" class="btn btn-danger" id="liveButton" onclick="toggleLiveData()">
+                            <span class="live-indicator"></span> LIVE
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Live Data Section -->
+                <div id="liveDataSection" class="live-data-container">
+                    <div class="row">
+                        <div class="col-12">
+                            <h4 class="mb-4">
+                                <span class="live-indicator"></span> 
+                                Live Market Data
+                                <small id="currentTime" class="text-muted d-block mt-2" style="font-size: 0.9rem;">--</small>
+                            </h4>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title">Current Price</h5>
+                                    <div class="live-price" id="currentPrice" style="font-size: 2.5rem; font-weight: bold;">--</div>
+                                    <div class="price-change" id="priceChange" style="font-size: 1.2rem;">--</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title">Volume</h5>
+                                    <div id="liveVolume" style="font-size: 2rem; font-weight: bold;">--</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12 mb-4">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title">MACD</h5>
+                                    <div id="liveMACD" style="font-size: 1.5rem; font-weight: bold;">--</div>
+                                    <small class="text-muted">MACD / Signal Line</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="loading-spinner">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Analyzing stock data...</p>
+                </div>
+
+                {% if error %}
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle"></i> {{ error }}
+                </div>
+                {% endif %}
+
+                {% if stock_data %}
+                <div class="stock-header">
+                    <h1>{{ stock_data.ticker }} - {{ stock_data.company_name }}</h1>
+                    <p>Real-time stock analysis and insights</p>
+                </div>
+
+                <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                    <button class="nav-link active" id="nav-overview-tab" data-bs-toggle="tab" data-bs-target="#nav-overview" type="button" role="tab">
+                        <i class="bi bi-graph-up-arrow"></i> Overview
+                    </button>
+                    <button class="nav-link" id="nav-financial-tab" data-bs-toggle="tab" data-bs-target="#nav-financial" type="button" role="tab">
+                        <i class="bi bi-cash-stack"></i> Financial Data
+                    </button>
+                </div>
+
+                <div class="tab-content" id="nav-tabContent">
+                    <div class="tab-pane fade show active" id="nav-overview" role="tabpanel">
+                        <!-- Technical Indicators -->
+                        <div class="chart-section mb-4">
+                            <h4 class="mb-3">
+                                <i class="bi bi-graph-up"></i> Technical Indicators
+                                <i class="bi bi-info-circle ms-2" data-bs-toggle="tooltip" data-bs-placement="right" 
+                                   title="Key technical indicators showing market momentum, trend strength, and trading volume"></i>
+                            </h4>
+                            <div class="indicators-grid">
+                                <!-- RSI Card -->
+                                <div class="indicator-card {% if stock_data.financial_info.get('rsi', 0) > 70 %}death-cross{% elif stock_data.financial_info.get('rsi', 0) < 30 %}golden-cross{% else %}neutral-cross{% endif %}">
+                                    <h6>
+                                        <i class="bi bi-speedometer2"></i> RSI (14)
+                                        <i class="bi bi-info-circle ms-2" data-bs-toggle="tooltip" data-bs-placement="top" 
+                                           title="Relative Strength Index measures momentum. Above 70 is overbought, below 30 is oversold"></i>
+                                    </h6>
+                                    <p>
+                                        {% set rsi = stock_data.financial_info.get('rsi', 0) %}
+                                        {% if rsi > 70 %}
+                                            <i class="bi bi-arrow-down-circle"></i> Overbought ({{ "%.2f"|format(rsi) }})
+                                        {% elif rsi < 30 %}
+                                            <i class="bi bi-arrow-up-circle"></i> Oversold ({{ "%.2f"|format(rsi) }})
+                                        {% else %}
+                                            <i class="bi bi-dash-circle"></i> Neutral ({{ "%.2f"|format(rsi) }})
+                                        {% endif %}
+                                    </p>
+                                </div>
+
+                                <!-- MACD Card -->
+                                <div class="indicator-card {% if stock_data.financial_info.get('macd', 0) > stock_data.financial_info.get('macd_signal', 0) %}golden-cross{% else %}death-cross{% endif %}">
+                                    <h6>
+                                        <i class="bi bi-graph-up"></i> MACD
+                                        <i class="bi bi-info-circle ms-2" data-bs-toggle="tooltip" data-bs-placement="top" 
+                                           title="Moving Average Convergence Divergence shows trend direction and momentum. MACD above Signal Line is bullish"></i>
+                                    </h6>
+                                    <p>
+                                        {% set macd = stock_data.financial_info.get('macd', 0) %}
+                                        {% set signal = stock_data.financial_info.get('macd_signal', 0) %}
+                                        {% if macd > signal %}
+                                            <i class="bi bi-arrow-up-circle"></i> Bullish ({{ "%.2f"|format(macd) }} > {{ "%.2f"|format(signal) }})
+                                        {% else %}
+                                            <i class="bi bi-arrow-down-circle"></i> Bearish ({{ "%.2f"|format(macd) }} < {{ "%.2f"|format(signal) }})
+                                        {% endif %}
+                                    </p>
+                                </div>
+
+                                <!-- Volume Card -->
+                                <div class="indicator-card {% if stock_data.financial_info.get('volume', 0) > stock_data.financial_info.get('avg_volume', 0) * 1.5 %}golden-cross{% elif stock_data.financial_info.get('volume', 0) < stock_data.financial_info.get('avg_volume', 0) * 0.5 %}death-cross{% else %}neutral-cross{% endif %}">
+                                    <h6>
+                                        <i class="bi bi-bar-chart"></i> Volume
+                                        <i class="bi bi-info-circle ms-2" data-bs-toggle="tooltip" data-bs-placement="top" 
+                                           title="Trading volume compared to average. High volume can confirm price trends"></i>
+                                    </h6>
+                                    <p>
+                                        {% set volume = stock_data.financial_info.get('volume', 0) %}
+                                        {% set avg_volume = stock_data.financial_info.get('avg_volume', 0) %}
+                                        {% if volume > avg_volume * 1.5 %}
+                                            <i class="bi bi-arrow-up-circle"></i> High Volume ({{ "%.0f"|format(volume/1000000) }}M)
+                                        {% elif volume < avg_volume * 0.5 %}
+                                            <i class="bi bi-arrow-down-circle"></i> Low Volume ({{ "%.0f"|format(volume/1000000) }}M)
+                                        {% else %}
+                                            <i class="bi bi-dash-circle"></i> Normal Volume ({{ "%.0f"|format(volume/1000000) }}M)
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Moving Average Crossover Analysis -->
+                        <div class="cross-status-section mb-4">
+                            <h4 class="mb-3">
+                                <i class="bi bi-graph-up-arrow"></i> Moving Average Crossover Analysis
+                                <i class="bi bi-info-circle ms-2" data-bs-toggle="tooltip" data-bs-placement="right" 
+                                   title="Analysis of 50-day and 200-day moving average crossovers. Golden Cross (50MA > 200MA) suggests bullish trend, Death Cross (50MA < 200MA) suggests bearish trend"></i>
+                            </h4>
+                            <div class="cross-status-cards">
+                                <div class="cross-status-card {% if stock_data.current_death_cross %}death-cross{% else %}golden-cross{% endif %}">
+                                    <h6>
+                                        <i class="bi bi-clock-history"></i> Current Market Trend
+                                        <i class="bi bi-info-circle ms-2" data-bs-toggle="tooltip" data-bs-placement="top" 
+                                           title="Current relationship between 50-day and 200-day moving averages"></i>
+                                    </h6>
+                                    <p>
+                                        {% if stock_data.current_death_cross %}
+                                            <i class="bi bi-arrow-down-circle"></i> Bearish Trend (50MA < 200MA)
+                                        {% else %}
+                                            <i class="bi bi-arrow-up-circle"></i> Bullish Trend (50MA > 200MA)
+                                        {% endif %}
+                                    </p>
+                                </div>
+                                
+                                {% if stock_data.has_death_cross %}
+                                <div class="cross-status-card death-cross">
+                                    <h6>
+                                        <i class="bi bi-calendar-event"></i> Last Bearish Signal
+                                        <i class="bi bi-info-circle ms-2" data-bs-toggle="tooltip" data-bs-placement="top" 
+                                           title="Most recent date when 50-day MA crossed below 200-day MA (Death Cross)"></i>
+                                    </h6>
+                                    <p><i class="bi bi-arrow-down-circle"></i> {{ stock_data.latest_death_cross }}</p>
+                                </div>
+                                {% endif %}
+                                
+                                {% if stock_data.has_golden_cross %}
+                                <div class="cross-status-card golden-cross">
+                                    <h6>
+                                        <i class="bi bi-calendar-event"></i> Last Bullish Signal
+                                        <i class="bi bi-info-circle ms-2" data-bs-toggle="tooltip" data-bs-placement="top" 
+                                           title="Most recent date when 50-day MA crossed above 200-day MA (Golden Cross)"></i>
+                                    </h6>
+                                    <p><i class="bi bi-arrow-up-circle"></i> {{ stock_data.latest_golden_cross }}</p>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="nav-financial" role="tabpanel">
+                        <div class="financial-section">
+                            <!-- Key Metrics -->
+                            <div class="section-header mb-4">
+                                <h4><i class="bi bi-key"></i> Key Metrics</h4>
+                            </div>
+                            <div class="metric-grid">
+                                <div class="metric-card">
+                                    <i class="bi bi-currency-dollar"></i>
+                                    <h5>Market Cap</h5>
+                                    <p>{{ stock_data.financial_info.market_cap }}</p>
+                                </div>
+                                <div class="metric-card">
+                                    <i class="bi bi-percent"></i>
+                                    <h5>P/E Ratio</h5>
+                                    <p>{{ stock_data.financial_info.pe_ratio }}</p>
+                                </div>
+                                <div class="metric-card">
+                                    <i class="bi bi-graph-up-arrow"></i>
+                                    <h5>Dividend Yield</h5>
+                                    <p>
+                                        {% if stock_data.financial_info.dividend_yield is not none %}
+                                            {{ "%.2f"|format(stock_data.financial_info.dividend_yield) }}%
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </p>
+                                </div>
+                                <div class="metric-card">
+                                    <i class="bi bi-arrow-left-right"></i>
+                                    <h5>Beta</h5>
+                                    <p>{{ stock_data.financial_info.beta }}</p>
+                                </div>
+                            </div>
+
+                            <!-- Company Info -->
+                            <div class="section-header mt-5 mb-4">
+                                <h4><i class="bi bi-building"></i> Company Information</h4>
+                            </div>
+                            <div class="metric-grid">
+                                <div class="metric-card">
+                                    <i class="bi bi-briefcase"></i>
+                                    <h5>Sector</h5>
+                                    <p>{{ stock_data.financial_info.sector }}</p>
+                                </div>
+                                <div class="metric-card">
+                                    <i class="bi bi-gear"></i>
+                                    <h5>Industry</h5>
+                                    <p>{{ stock_data.financial_info.industry }}</p>
+                                </div>
+                                <div class="metric-card">
+                                    <i class="bi bi-people"></i>
+                                    <h5>Employees</h5>
+                                    <p>{{ stock_data.financial_info.employees }}</p>
+                                </div>
+                            </div>
+
+                            <!-- Financial Ratios -->
+                            <div class="section-header mt-5 mb-4">
+                                <h4><i class="bi bi-calculator"></i> Financial Ratios</h4>
+                            </div>
+                            <div class="metric-grid">
+                                <div class="metric-card">
+                                    <i class="bi bi-cash-stack"></i>
+                                    <h5>Revenue</h5>
+                                    <p>{{ stock_data.financial_info.revenue }}</p>
+                                </div>
+                                <div class="metric-card">
+                                    <i class="bi bi-pie-chart"></i>
+                                    <h5>Profit Margin</h5>
+                                    <p>{{ stock_data.financial_info.profit_margin }}</p>
+                                </div>
+                                <div class="metric-card">
+                                    <i class="bi bi-bank2"></i>
+                                    <h5>Debt to Equity</h5>
+                                    <p>{{ stock_data.financial_info.debt_to_equity }}</p>
+                                </div>
+                                <div class="metric-card">
+                                    <i class="bi bi-arrow-repeat"></i>
+                                    <h5>Current Ratio</h5>
+                                    <p>{{ stock_data.financial_info.current_ratio }}</p>
+                                </div>
+                                <div class="metric-card">
+                                    <i class="bi bi-graph-up-arrow"></i>
+                                    <h5>Return on Equity</h5>
+                                    <p>{{ stock_data.financial_info.return_on_equity }}</p>
+                                </div>
+                                <div class="metric-card">
+                                    <i class="bi bi-graph-up-arrow"></i>
+                                    <h5>Return on Assets</h5>
+                                    <p>{{ stock_data.financial_info.return_on_assets }}</p>
+                                </div>
+                            </div>
+
+                            <!-- Company Description -->
+                            <div class="company-info mt-5">
+                                <div class="section-header mb-4">
+                                    <h4><i class="bi bi-info-circle"></i> Company Description</h4>
+                                </div>
+                                <div class="description-card">
+                                    <p>{{ stock_data.financial_info.description }}</p>
+                                    {% if stock_data.financial_info.website %}
+                                    <div class="website-link mt-3">
+                                        <i class="bi bi-globe"></i>
+                                        <a href="{{ stock_data.financial_info.website }}" target="_blank">{{ stock_data.financial_info.website }}</a>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-light py-4 mt-5">
+        <div class="container text-center">
+            <p class="mb-0">AIMoney &copy; 2025 All Rights Reserved</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Global variables
+        let updateInterval = null;
+        let retryCount = 0;
+        const MAX_RETRIES = 3;
+
+        function getSymbol() {
+            const symbolInput = document.getElementById('symbol');
+            if (!symbolInput) {
+                console.error('Symbol input element not found');
+                return '';
+            }
+            return symbolInput.value.trim();
+        }
+
+        function toggleLiveData() {
+            const symbol = getSymbol();
+            if (!symbol) {
+                alert('Please enter a stock symbol');
+                return;
+            }
+
+            const liveSection = document.getElementById('liveDataSection');
+            const liveButton = document.getElementById('liveButton');
+            const spinner = document.querySelector('.loading-spinner');
+            
+            if (!liveSection || !liveButton) {
+                console.error('Required elements not found');
+                return;
+            }
+            
+            if (liveSection.style.display === 'none' || !liveSection.style.display) {
+                // Starting live updates
+                liveSection.style.display = 'block';
+                liveButton.classList.remove('btn-danger');
+                liveButton.classList.add('btn-success');
+                if (spinner) spinner.style.display = 'none';
+                startLiveUpdates();
+            } else {
+                // Stopping live updates
+                liveSection.style.display = 'none';
+                liveButton.classList.remove('btn-success');
+                liveButton.classList.add('btn-danger');
+                if (spinner) spinner.style.display = 'none';
+                stopLiveUpdates();
+            }
+        }
+
+        function startLiveUpdates() {
+            const symbol = getSymbol();
+            if (!symbol) {
+                stopLiveUpdates();
+                alert('Please enter a stock symbol');
+                return;
+            }
+
+            // Hide loading spinner when starting live updates
+            const spinner = document.querySelector('.loading-spinner');
+            if (spinner) {
+                spinner.style.display = 'none';
+            }
+
+            clearInterval(updateInterval);
+            updateInterval = setInterval(fetchLiveData, 5000);
+            fetchLiveData(); // Initial fetch
+        }
+
+        function stopLiveUpdates() {
+            clearInterval(updateInterval);
+            retryCount = 0;
+
+            // Hide loading spinner when stopping live updates
+            const spinner = document.querySelector('.loading-spinner');
+            if (spinner) {
+                spinner.style.display = 'none';
+            }
+        }
+
+        async function fetchLiveData() {
+            const symbol = getSymbol();
+            if (!symbol) {
+                stopLiveUpdates();
+                return;
+            }
+
+            try {
+                const response = await fetch(`/live`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Cache-Control': 'no-cache',
+                        'Pragma': 'no-cache'
+                    },
+                    body: `symbol=${encodeURIComponent(symbol)}`
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                if (data.success) {
+                    updateDisplay(data);
+                    retryCount = 0; // Reset retry count on successful update
+                } else {
+                    handleError(data.error || 'Unknown error occurred');
+                }
+            } catch (error) {
+                handleError(error);
+            }
+        }
+
+        function handleError(error) {
+            console.error('Error:', error);
+            retryCount++;
+            
+            if (retryCount >= MAX_RETRIES) {
+                stopLiveUpdates();
+                alert('Failed to update data after multiple attempts. Please try again later.');
+            } else {
+                console.log(`Retry attempt ${retryCount} of ${MAX_RETRIES}`);
+                // Wait longer between retries
+                setTimeout(fetchLiveData, 2000 * retryCount);
+            }
+        }
+
+        function updateDisplay(data) {
+            // Update price
+            updatePrice(data);
+            
+            // Update volume
+            updateVolume(data);
+            
+            // Update time and market status
+            updateTimeAndStatus(data);
+            
+            // Update technical indicators
+            updateIndicators(data);
+        }
+
+        function updatePrice(data) {
+            const priceElement = document.getElementById('currentPrice');
+            const priceChangeElement = document.getElementById('priceChange');
+            
+            if (data.price != null) {
+                const oldPrice = parseFloat(priceElement.dataset.price || 0);
+                const newPrice = parseFloat(data.price);
+                
+                priceElement.dataset.price = newPrice;
+                priceElement.textContent = formatCurrency(newPrice);
+                
+                // Update price change animation
+                const priceChange = newPrice - oldPrice;
+                priceElement.className = 'live-price ' + (priceChange > 0 ? 'price-up' : priceChange < 0 ? 'price-down' : '');
+                
+                // Update percentage change
+                if (data.previousClose != null) {
+                    const percentChange = ((newPrice - data.previousClose) / data.previousClose * 100).toFixed(2);
+                    priceChangeElement.textContent = `${percentChange}%`;
+                    priceChangeElement.className = percentChange > 0 ? 'text-success' : 'text-danger';
+                }
+            } else {
+                priceElement.textContent = '--';
+                priceChangeElement.textContent = '--';
+            }
+        }
+
+        function updateVolume(data) {
+            const volumeElement = document.getElementById('liveVolume');
+            volumeElement.textContent = data.volume != null ? formatNumber(data.volume) : '--';
+        }
+
+        function updateTimeAndStatus(data) {
+            const timeElement = document.getElementById('currentTime');
+            const marketStatusElement = document.getElementById('marketStatus');
+            
+            if (data.current_time) {
+                timeElement.textContent = data.current_time;
+            }
+            
+            if (marketStatusElement && data.is_market_open != null) {
+                marketStatusElement.textContent = data.is_market_open ? 'Market Open' : 'Market Closed';
+                marketStatusElement.className = `market-status ${data.is_market_open ? 'open' : 'closed'}`;
+            }
+        }
+
+        function updateIndicators(data) {
+            // Update MACD
+            const macdElement = document.getElementById('liveMACD');
+            if (macdElement) {
+                if (data.macd != null && data.signal_line != null) {
+                    const macdValue = parseFloat(data.macd);
+                    const signalValue = parseFloat(data.signal_line);
+                    macdElement.textContent = `${macdValue.toFixed(2)} / ${signalValue.toFixed(2)}`;
+                    macdElement.className = 'indicator ' + (macdValue > signalValue ? 'price-up' : 'price-down');
+                } else {
+                    macdElement.textContent = '--';
+                    macdElement.className = 'indicator';
+                }
+            }
+        }
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD'
+            }).format(value);
+        }
+
+        function formatNumber(value) {
+            return new Intl.NumberFormat('en-US', {
+                notation: "compact",
+                compactDisplay: "short"
+            }).format(value);
+        }
+
+        function isMarketCurrentlyOpen() {
+            const now = new Date();
+            const day = now.getDay();
+            const hour = now.getHours();
+            const minute = now.getMinutes();
+            
+            // Check if it's a weekday
+            if (day === 0 || day === 6) return false;
+            
+            // Convert to ET (UTC-4 or UTC-5 depending on daylight savings)
+            const etHour = (hour + 24 - 4) % 24; // Simplified EST conversion
+            
+            // Market hours: 9:30 AM - 4:00 PM ET
+            return (etHour > 9 || (etHour === 9 && minute >= 30)) && (etHour < 16);
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchForm = document.getElementById('searchForm');
+            const startDate = document.querySelector('input[name="start_date"]');
+            const endDate = document.querySelector('input[name="end_date"]');
+            
+            if (searchForm) {
+                searchForm.addEventListener('submit', function(e) {
+                    e.preventDefault(); // Always prevent default form submission
+                    
+                    // Clear previous data
+                    clearPreviousData();
+                    
+                    // Show loading spinner
+                    const spinner = document.querySelector('.loading-spinner');
+                    if (spinner) spinner.style.display = 'block';
+                    
+                    // Get form data
+                    const formData = new FormData(this);
+                    
+                    // Make the AJAX request
+                    fetch('/analyze', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => {
+                        // Check if response is JSON
+                        const contentType = response.headers.get('content-type');
+                        if (contentType && contentType.includes('application/json')) {
+                            return response.json();
+                        }
+                        // Store the current dates before reload
+                        const startDate = document.querySelector('input[name="start_date"]').value;
+                        const endDate = document.querySelector('input[name="end_date"]').value;
+                        localStorage.setItem('startDate', startDate);
+                        localStorage.setItem('endDate', endDate);
+                        // If not JSON, it's likely HTML - reload the page
+                        window.location.reload();
+                        return null;
+                    })
+                    .then(data => {
+                        if (data === null) return; // Page is reloading
+                        if (data.error) {
+                            throw new Error(data.error);
+                        }
+                        // Preserve the date values after successful submission
+                        const startDateInput = document.querySelector('input[name="start_date"]');
+                        const endDateInput = document.querySelector('input[name="end_date"]');
+                        if (startDateInput && endDateInput) {
+                            startDateInput.value = formData.get('start_date');
+                            endDateInput.value = formData.get('end_date');
+                        }
+                        updateStockDisplay(data);
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        if (!error.message.includes('<!DOCTYPE')) {
+                            alert(error.message || 'An error occurred while analyzing the stock.');
+                        }
+                    })
+                    .finally(() => {
+                        if (spinner) spinner.style.display = 'none';
+                    });
+                });
+            }
+
+            // Add code to restore dates on page load
+            const savedStartDate = localStorage.getItem('startDate');
+            const savedEndDate = localStorage.getItem('endDate');
+            if (savedStartDate && savedEndDate) {
+                const startDateInput = document.querySelector('input[name="start_date"]');
+                const endDateInput = document.querySelector('input[name="end_date"]');
+                if (startDateInput && endDateInput) {
+                    startDateInput.value = savedStartDate;
+                    endDateInput.value = savedEndDate;
+                    // Clear the stored dates after restoring them
+                    localStorage.removeItem('startDate');
+                    localStorage.removeItem('endDate');
+                }
+            }
+
+            // Add date change handlers with debounce
+            if (startDate && endDate) {
+                let dateChangeTimeout;
+                const DELAY = 1000; // 1 second delay
+
+                [startDate, endDate].forEach(input => {
+                    input.addEventListener('change', function() {
+                        // Clear any existing timeout
+                        if (dateChangeTimeout) {
+                            clearTimeout(dateChangeTimeout);
+                        }
+                        
+                        // Set a new timeout
+                        dateChangeTimeout = setTimeout(() => {
+                            // Only submit if both dates have values
+                            if (startDate.value && endDate.value) {
+                                const start = new Date(startDate.value);
+                                const end = new Date(endDate.value);
+                                
+                                // Only submit if dates are valid and start is before end
+                                if (start && end && start <= end) {
+                                    const analyzeButton = document.getElementById('analyzeButton');
+                                    if (analyzeButton) analyzeButton.click();
+                                }
+                            }
+                        }, DELAY);
+                    });
+                });
+            }
+        });
+
+        // Update the analyze button click handler to use the form submit
+        document.addEventListener('DOMContentLoaded', function() {
+            const analyzeButton = document.getElementById('analyzeButton');
+            if (analyzeButton) {
+                analyzeButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const form = document.getElementById('searchForm');
+                    if (form) {
+                        // Trigger the form's submit event
+                        const submitEvent = new Event('submit', {
+                            bubbles: true,
+                            cancelable: true
+                        });
+                        form.dispatchEvent(submitEvent);
+                    }
+                });
+            }
+        });
+
+        function clearPreviousData() {
+            // Clear stock data section
+            const stockHeader = document.querySelector('.stock-header');
+            if (stockHeader) stockHeader.style.display = 'none';
+            
+            // Clear charts
+            const chartSection = document.querySelector('.chart-section');
+            if (chartSection) chartSection.style.display = 'none';
+            
+            // Clear indicators
+            const indicatorsSection = document.querySelector('.indicators-section');
+            if (indicatorsSection) indicatorsSection.style.display = 'none';
+            
+            // Clear financial data
+            const financialSection = document.querySelector('.financial-section');
+            if (financialSection) financialSection.style.display = 'none';
+            
+            // Clear live data if it's visible
+            const liveDataSection = document.getElementById('liveDataSection');
+            if (liveDataSection) liveDataSection.style.display = 'none';
+            
+            // Reset live button state
+            const liveButton = document.getElementById('liveButton');
+            if (liveButton) {
+                liveButton.classList.remove('btn-success');
+                liveButton.classList.add('btn-danger');
+            }
+            
+            // Stop any ongoing live updates
+            stopLiveUpdates();
+        }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', stopLiveUpdates);
+
+        // Helper functions for indicator classes and formatting
+        function getRSIClass(rsi) {
+            if (!rsi) return 'neutral-cross';
+            if (rsi > 70) return 'death-cross';
+            if (rsi < 30) return 'golden-cross';
+            return 'neutral-cross';
+        }
+
+        function getMACDClass(macd, signal) {
+            if (!macd || !signal) return 'neutral-cross';
+            return macd > signal ? 'golden-cross' : 'death-cross';
+        }
+
+        function getVolumeClass(volume, avgVolume) {
+            if (!volume || !avgVolume) return 'neutral-cross';
+            if (volume > avgVolume * 1.5) return 'golden-cross';
+            if (volume < avgVolume * 0.5) return 'death-cross';
+            return 'neutral-cross';
+        }
+
+        function formatRSIValue(rsi) {
+            if (!rsi) return '--';
+            if (rsi > 70) return `<i class="bi bi-arrow-down-circle"></i> Overbought (${rsi.toFixed(2)})`;
+            if (rsi < 30) return `<i class="bi bi-arrow-up-circle"></i> Oversold (${rsi.toFixed(2)})`;
+            return `<i class="bi bi-dash-circle"></i> Neutral (${rsi.toFixed(2)})`;
+        }
+
+        function formatMACDValue(macd, signal) {
+            if (!macd || !signal) return '--';
+            return macd > signal 
+                ? `<i class="bi bi-arrow-up-circle"></i> Bullish (${macd.toFixed(2)} > ${signal.toFixed(2)})`
+                : `<i class="bi bi-arrow-down-circle"></i> Bearish (${macd.toFixed(2)} < ${signal.toFixed(2)})`;
+        }
+
+        function formatVolumeValue(volume, avgVolume) {
+            if (!volume || !avgVolume) return '--';
+            const volumeM = volume / 1000000;
+            if (volume > avgVolume * 1.5) return `<i class="bi bi-arrow-up-circle"></i> High Volume (${volumeM.toFixed(0)}M)`;
+            if (volume < avgVolume * 0.5) return `<i class="bi bi-arrow-down-circle"></i> Low Volume (${volumeM.toFixed(0)}M)`;
+            return `<i class="bi bi-dash-circle"></i> Normal Volume (${volumeM.toFixed(0)}M)`;
+        }
+
+        // Initialize tooltips
+        document.addEventListener('DOMContentLoaded', function() {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            });
+        });
+    </script>
+</body>
+</html> 

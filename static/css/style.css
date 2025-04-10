@@ -1,0 +1,109 @@
+/* Live Data Animations */
+.live-price {
+    transition: color 0.3s ease-in-out;
+}
+
+.price-up {
+    color: #28a745;
+    animation: flash-green 1s;
+}
+
+.price-down {
+    color: #dc3545;
+    animation: flash-red 1s;
+}
+
+@keyframes flash-green {
+    0% { background-color: rgba(40, 167, 69, 0.2); }
+    100% { background-color: transparent; }
+}
+
+@keyframes flash-red {
+    0% { background-color: rgba(220, 53, 69, 0.2); }
+    100% { background-color: transparent; }
+}
+
+/* Loading Placeholders */
+.placeholder-glow .placeholder {
+    animation: placeholder-glow 2s ease-in-out infinite;
+}
+
+@keyframes placeholder-glow {
+    50% { opacity: 0.2; }
+}
+
+/* Live Data Section */
+#liveDataSection {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+#liveDataSection .data-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #dee2e6;
+}
+
+#liveDataSection .data-row:last-child {
+    border-bottom: none;
+}
+
+#liveDataSection .data-label {
+    font-weight: 600;
+    color: #495057;
+}
+
+#liveDataSection .data-value {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 1.1em;
+}
+
+/* Indicator Styles */
+.indicator {
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+.indicator.overbought {
+    background-color: rgba(220, 53, 69, 0.1);
+}
+
+.indicator.oversold {
+    background-color: rgba(40, 167, 69, 0.1);
+}
+
+/* Market Status */
+.market-status {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    font-weight: 500;
+}
+
+.market-status.open {
+    background-color: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+}
+
+.market-status.closed {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+}
+
+/* Time Display */
+#currentTime {
+    font-size: 0.9em;
+    color: #6c757d;
+}
+
+/* Volume Display */
+#liveVolume {
+    transition: color 0.3s ease;
+} 
